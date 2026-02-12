@@ -1,427 +1,573 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Downloader</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lei's Valentine</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  height:100%;
+  background:#ffffff;
+  font-family:'Source Sans Pro',sans-serif;
+  overflow:hidden;
+  cursor:none;
+}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
+.cursor{
+  position:fixed;pointer-events:none;z-index:9999;
+  width:10px;height:10px;border-radius:50%;
+  background:#c0627a;
+  transform:translate(-50%,-50%);
+  transition:left .06s,top .06s;
+  box-shadow:0 0 8px rgba(192,98,122,.4);
+}
 
-        .container {
-            width: 100%;
-            max-width: 520px;
-            background: #fff;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            animation: fadeInUp 0.5s ease;
-        }
+#bgCanvas{position:fixed;inset:0;z-index:0;pointer-events:none}
+#celebCanvas{position:fixed;inset:0;z-index:100;pointer-events:none;display:none}
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+#loader{
+  position:fixed;inset:0;background:#fff;z-index:1000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;
+  transition:opacity .9s,visibility .9s;
+}
+#loader.hide{opacity:0;visibility:hidden}
+.loader-ring{
+  width:44px;height:44px;border-radius:50%;
+  border:2px solid #f0d9dd;
+  border-top-color:#c0627a;
+  animation:spin .9s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader-label{
+  font-size:.75rem;font-weight:300;
+  color:#b08090;letter-spacing:3px;text-transform:uppercase;
+  animation:fadeIO 1.6s infinite;
+}
+@keyframes fadeIO{0%,100%{opacity:.3}50%{opacity:1}}
 
-        .header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
+#main{
+  position:relative;z-index:10;
+  height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  opacity:0;
+  animation:fadeUp 1s .6s forwards;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
-        .youtube-icon {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);
-            border-radius: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
-        }
+.content{
+  width:100%;max-width:420px;
+  text-align:center;
+}
 
-        .youtube-icon svg {
-            width: 36px;
-            height: 36px;
-            fill: #fff;
-        }
+.eyebrow{
+  font-size:.68rem;font-weight:300;
+  letter-spacing:5px;text-transform:uppercase;
+  color:#c0a0a8;
+  margin-bottom:32px;
+  animation:eyeFloat 4s ease-in-out infinite;
+}
+@keyframes eyeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
 
-        h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #1c1e21;
-        }
+.heart-icon{
+  width:36px;height:36px;
+  margin:0 auto 28px;
+  position:relative;
+  animation:heartBeat 1.2s ease-in-out infinite;
+}
+@keyframes heartBeat{
+  0%,100%{transform:scale(1)}
+  14%{transform:scale(1.1)}
+  28%{transform:scale(1)}
+  42%{transform:scale(1.06)}
+}
+.heart-icon::before,.heart-icon::after{
+  content:'';position:absolute;
+  width:18px;height:28px;border-radius:18px 18px 0 0;
+  background:linear-gradient(160deg,#d4758a,#c0627a);
+}
+.heart-icon::before{left:18px;transform-origin:0 100%;transform:rotate(-45deg)}
+.heart-icon::after{left:0;transform-origin:100% 100%;transform:rotate(45deg)}
 
-        .subtitle {
-            font-size: 15px;
-            color: #65676b;
-        }
+.question{
+  font-size:1.65rem;font-weight:600;
+  color:#2a1520;
+  letter-spacing:-.3px;
+  line-height:1.35;
+  margin-bottom:14px;
+}
 
-        .input-group {
-            margin-bottom: 20px;
-        }
+.divider{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  margin:18px auto;
+}
+.div-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4a0ad,transparent)}
+.div-dot{width:4px;height:4px;border-radius:50%;background:#c0627a;opacity:.6}
 
-        input[type="text"] {
-            width: 100%;
-            padding: 16px 20px;
-            border: 2px solid #e4e6eb;
-            border-radius: 12px;
-            font-size: 15px;
-            font-family: 'Inter', sans-serif;
-            transition: all 0.3s ease;
-            background: #f5f6f7;
-        }
+.subtitle{
+  font-size:.88rem;font-weight:300;font-style:italic;
+  color:#8a6070;
+  line-height:1.85;
+  letter-spacing:.2px;
+}
+.subtitle b{font-weight:600;font-style:normal;color:#c0627a}
 
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #FF0000;
-            background: #fff;
-            box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.1);
-        }
+.prompt{
+  font-size:1rem;font-weight:400;
+  color:#b08090;
+  letter-spacing:.4px;
+  margin-top:16px;
+  opacity:1;
+  transition:opacity .4s ease, transform .4s ease;
+}
+.prompt.fade-out{
+  opacity:0;
+  transform:translateY(-8px);
+}
+.prompt.fade-in{
+  animation:fadeSlideIn .5s ease forwards;
+}
+@keyframes fadeSlideIn{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
 
-        input[type="text"]::placeholder {
-            color: #8a8d91;
-        }
+.btns{
+  display:flex;
+  align-items:center;justify-content:center;
+  gap:16px;
+  margin-top:8px;
+  flex-wrap:wrap;
+  min-height:60px;
+}
 
-        .btn {
-            width: 100%;
-            padding: 16px;
-            background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);
-            color: #fff;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
-            position: relative;
-            overflow: hidden;
-        }
+.btn-yes{
+  font-family:'Source Sans Pro',sans-serif;
+  font-size:.82rem;font-weight:600;
+  letter-spacing:3px;text-transform:uppercase;
+  color:#fff;
+  background:#c0627a;
+  border:none;border-radius:3px;
+  padding:14px 44px;
+  cursor:none;
+  position:relative;overflow:hidden;
+  box-shadow:0 8px 24px rgba(192,98,122,.3);
+  transition:transform .2s,box-shadow .2s;
+  animation:yesPulse 2.5s ease-in-out infinite;
+}
+.btn-yes::after{
+  content:'';position:absolute;
+  top:0;left:-80%;
+  width:50%;height:100%;
+  background:rgba(255,255,255,.18);
+  transform:skewX(-20deg);
+  animation:sweep 2.8s infinite;
+}
+@keyframes sweep{0%{left:-80%}100%{left:140%}}
+@keyframes yesPulse{
+  0%,100%{box-shadow:0 8px 24px rgba(192,98,122,.3)}
+  50%{box-shadow:0 12px 36px rgba(192,98,122,.48)}
+}
+.btn-yes:active{transform:scale(.97)}
 
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transition: left 0.5s;
-        }
+.btn-no{
+  font-family:'Source Sans Pro',sans-serif;
+  font-size:.82rem;font-weight:400;
+  letter-spacing:3px;text-transform:uppercase;
+  color:#c0627a;
+  background:transparent;
+  border:1px solid #d9a0ad;
+  border-radius:3px;
+  padding:14px 44px;
+  cursor:none;
+  position:fixed;
+  transition:opacity .25s,border-color .25s,color .25s;
+}
+.btn-no:hover{background:rgba(192,98,122,.04)}
 
-        .btn:hover::before {
-            left: 100%;
-        }
+#celebration{
+  position:fixed;inset:0;
+  background:rgba(255,255,255,.97);
+  backdrop-filter:blur(6px);
+  z-index:200;
+  display:none;
+  flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:30px;
+  gap:16px;
+}
+.celeb-heart{
+  width:52px;height:52px;position:relative;
+  margin:0 auto;
+  animation:cBeat .55s ease-in-out infinite alternate;
+}
+@keyframes cBeat{0%{transform:scale(1)}100%{transform:scale(1.18)}}
+.celeb-heart::before,.celeb-heart::after{
+  content:'';position:absolute;
+  width:26px;height:40px;border-radius:26px 26px 0 0;
+  background:linear-gradient(160deg,#e08090,#c0627a);
+}
+.celeb-heart::before{left:26px;transform-origin:0 100%;transform:rotate(-45deg)}
+.celeb-heart::after{left:0;transform-origin:100% 100%;transform:rotate(45deg)}
 
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.5);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn:disabled {
-            background: linear-gradient(135deg, #b8b8b8 0%, #8f8f8f 100%);
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #fff;
-            border-radius: 50%;
-            border-top-color: transparent;
-            animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-            vertical-align: middle;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .status {
-            margin-top: 24px;
-            text-align: center;
-            font-size: 14px;
-            min-height: 20px;
-        }
-
-        .status.loading {
-            color: #65676b;
-        }
-
-        .status.error {
-            color: #e41e3f;
-            background: #ffebee;
-            padding: 12px;
-            border-radius: 8px;
-            animation: shake 0.5s;
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-
-        .status.success {
-            color: #00a400;
-        }
-
-        .result-card {
-            background: #f5f6f7;
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
-            animation: slideIn 0.4s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .thumbnail {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .video-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #1c1e21;
-            margin-bottom: 12px;
-            line-height: 1.4;
-        }
-
-        .download-btn {
-            display: inline-block;
-            width: 100%;
-            padding: 14px 24px;
-            background: linear-gradient(135deg, #FF0000 0%, #B80000 100%);
-            color: #fff;
-            text-decoration: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(255, 0, 0, 0.4);
-        }
-
-        .download-btn:active {
-            transform: translateY(0);
-        }
-
-        footer {
-            width: 100%;
-            text-align: center;
-            padding: 20px;
-            font-size: 13px;
-            color: #65676b;
-            margin-top: 20px;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px 24px;
-            }
-
-            h1 {
-                font-size: 24px;
-            }
-
-            .subtitle {
-                font-size: 14px;
-            }
-
-            input[type="text"], .btn {
-                font-size: 14px;
-            }
-
-            .youtube-icon {
-                width: 56px;
-                height: 56px;
-            }
-
-            .youtube-icon svg {
-                width: 32px;
-                height: 32px;
-            }
-        }
-    </style>
+.celeb-title{
+  font-size:1.45rem;font-weight:600;
+  color:#2a1520;letter-spacing:-.2px;
+  animation:fadeUp .6s forwards;
+}
+.celeb-sub{
+  font-size:.85rem;font-weight:300;font-style:italic;
+  color:#8a6070;line-height:1.9;
+  max-width:280px;
+  animation:fadeUp .6s .2s both;
+}
+.fhearts{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="youtube-icon">
-                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
-                </svg>
-            </div>
-            <h1>YouTube Downloader</h1>
-            <p class="subtitle">Download videos in HD quality</p>
-        </div>
 
-        <div class="input-group">
-            <input 
-                type="text" 
-                id="urlInput" 
-                placeholder="Paste YouTube video URL here..."
-                autocomplete="off"
-            >
-        </div>
+<div class="cursor" id="cursor"></div>
 
-        <button class="btn" id="downloadBtn">Download</button>
+<!-- Loader -->
+<div id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-label">preparing</div>
+</div>
 
-        <div class="status" id="status"></div>
+<canvas id="bgCanvas"></canvas>
+<canvas id="celebCanvas"></canvas>
+
+<!-- Main -->
+<div id="main">
+  <div class="content">
+    <div class="eyebrow">February 14</div>
+    <div class="heart-icon"></div>
+    <h1 class="question">Will you be my Valentine?</h1>
+    <div class="divider">
+      <div class="div-line"></div>
+      <div class="div-dot"></div>
+      <div class="div-line"></div>
     </div>
+    <p class="subtitle">
+      I, <b>Lei</b>, am sincerely asking you<br>
+      to be my Valentine this February 14.
+    </p>
+    <div class="btns">
+      <button class="btn-yes" id="btnYes" onclick="celebrate()">Yes</button>
+      <button class="btn-no" id="btnNo" onclick="handleNo()">No</button>
+    </div>
+    <p class="prompt" id="promptText">you may answer now 💞</p>
+  </div>
+</div>
 
-    <footer>
-        © 2026 | Siegfried Samá
-    </footer>
+<!-- Celebration -->
+<div id="celebration">
+  <div class="fhearts" id="fhearts"></div>
+  <div class="celeb-heart"></div>
+  <div class="celeb-title">YIEEEEE! 💕</div>
+  <p class="celeb-sub">
+    Kilig much! You said YES! 🥰<br>
+    Lei is now officially the luckiest girl alive!<br>
+    This is the start of our forever. ❤️
+  </p>
+</div>
 
-    <script>
-        const urlInput = document.getElementById('urlInput');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const status = document.getElementById('status');
+<script>
+// ── CURSOR ──
+const cur = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cur.style.left = e.clientX + 'px';
+  cur.style.top = e.clientY + 'px';
+});
 
-        downloadBtn.addEventListener('click', async () => {
-            const url = urlInput.value.trim();
+// ── LOADER ──
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hide');
+    initBg();
+    placeNo();
+  }, 1800);
+});
 
-            // Clear previous status
-            status.className = 'status';
-            status.innerHTML = '';
+// ── BG CANVAS ──
+const bgC = document.getElementById('bgCanvas');
+const bgX = bgC.getContext('2d');
+function resizeBg(){ bgC.width=innerWidth; bgC.height=innerHeight; }
+resizeBg();
+window.addEventListener('resize', () => { resizeBg(); placeNo(); });
 
-            // Validate input
-            if (!url) {
-                status.className = 'status error';
-                status.textContent = '⚠️ Please enter a YouTube URL';
-                return;
-            }
+// Soft floating petals (no emoji — pure shapes)
+class Petal {
+  constructor(){ this.init(); }
+  init(){
+    this.x = Math.random() * bgC.width;
+    this.y = -20 - Math.random() * bgC.height;
+    this.w = 6 + Math.random() * 10;
+    this.h = 9 + Math.random() * 14;
+    this.vy = .35 + Math.random() * .8;
+    this.vx = (Math.random() - .5) * .5;
+    this.rot = Math.random() * 360;
+    this.rs = (Math.random() - .5) * 1.2;
+    this.op = .06 + Math.random() * .14;
+    const hue = 340 + Math.random() * 20;
+    const l = 70 + Math.random() * 20;
+    this.col = `hsl(${hue},60%,${l}%)`;
+  }
+  update(){
+    this.y += this.vy;
+    this.x += this.vx + Math.sin(this.y * .012) * .3;
+    this.rot += this.rs;
+    if(this.y > bgC.height + 30) this.init();
+  }
+  draw(){
+    bgX.save();
+    bgX.globalAlpha = this.op;
+    bgX.translate(this.x, this.y);
+    bgX.rotate(this.rot * Math.PI / 180);
+    bgX.beginPath();
+    bgX.ellipse(0, 0, this.w/2, this.h/2, 0, 0, Math.PI*2);
+    bgX.fillStyle = this.col;
+    bgX.fill();
+    bgX.restore();
+  }
+}
 
-            if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
-                status.className = 'status error';
-                status.textContent = '⚠️ Invalid YouTube URL';
-                return;
-            }
+// Soft dust sparkles
+class Dust {
+  constructor(){ this.init(); }
+  init(){
+    this.x = Math.random() * bgC.width;
+    this.y = Math.random() * bgC.height;
+    this.r = .5 + Math.random() * 1.5;
+    this.phase = Math.random() * Math.PI * 2;
+    this.sp = .015 + Math.random() * .025;
+  }
+  update(){ this.phase += this.sp; }
+  draw(){
+    const a = (Math.sin(this.phase) + 1) / 2 * .18;
+    bgX.beginPath();
+    bgX.arc(this.x, this.y, this.r, 0, Math.PI*2);
+    bgX.fillStyle = `rgba(192,98,122,${a})`;
+    bgX.fill();
+  }
+}
 
-            // Show loading state
-            downloadBtn.disabled = true;
-            downloadBtn.innerHTML = '<span class="spinner"></span>Processing...';
-            status.className = 'status loading';
-            status.textContent = '⏳ Fetching video...';
+let petals = [], dusts = [];
+function initBg(){
+  for(let i=0;i<55;i++) petals.push(new Petal());
+  for(let i=0;i<140;i++) dusts.push(new Dust());
+  animBg();
+}
+function animBg(){
+  bgX.clearRect(0,0,bgC.width,bgC.height);
+  dusts.forEach(d=>{d.update();d.draw()});
+  petals.forEach(p=>{p.update();p.draw()});
+  requestAnimationFrame(animBg);
+}
 
-            try {
-                const encodedUrl = encodeURIComponent(url);
-                const apiUrl = `https://api-library-kohi.onrender.com/api/alldl?url=${encodedUrl}`;
+// ── NO BUTTON ──
+const btnNo = document.getElementById('btnNo');
+const btnYes = document.getElementById('btnYes');
+const promptText = document.getElementById('promptText');
+let noClicks = 0;
+let isDodging = false;
 
-                const response = await fetch(apiUrl, {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                    }
-                });
-                
-                // Check if response is ok
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
+const noMessages = [
+  "sure na ba?",
+  "wag oi",
+  "pls, click mo na yung YES"
+];
 
-                const result = await response.json();
-                console.log('API Response:', result);
+function updatePromptText(newText){
+  // Fade out
+  promptText.classList.add('fade-out');
+  
+  // Wait for fade out, then change text and fade in
+  setTimeout(() => {
+    promptText.textContent = newText;
+    promptText.classList.remove('fade-out');
+    promptText.classList.add('fade-in');
+    
+    // Remove fade-in class after animation
+    setTimeout(() => {
+      promptText.classList.remove('fade-in');
+    }, 500);
+  }, 400);
+}
 
-                // Check if API returned success
-                if (!result.status || result.status !== true) {
-                    throw new Error('API returned unsuccessful response');
-                }
+function handleNo(){
+  if(noClicks < 3){
+    updatePromptText(noMessages[noClicks]);
+    noClicks++;
+    
+    // After 3rd click, start dodging
+    if(noClicks === 3){
+      setTimeout(() => {
+        isDodging = true;
+        btnNo.style.transition = 'left .25s ease-out, top .25s ease-out, opacity .25s';
+      }, 800); // Give time for message to show
+    }
+  }
+}
 
-                // Get download URL from result.data.videoUrl (nested structure)
-                const downloadUrl = result.data?.videoUrl;
+function placeNo(){
+  if(isDodging) return;
+  const r = btnYes.getBoundingClientRect();
+  btnNo.style.left = (r.right + 20) + 'px';
+  btnNo.style.top = r.top + 'px';
+}
 
-                if (!downloadUrl) {
-                    console.error('Full response:', result);
-                    throw new Error('Download link not found in response');
-                }
+function dodgeButton(){
+  if(!isDodging) return;
+  
+  const pad = 80;
+  const nx = pad + Math.random() * (innerWidth - pad*2);
+  const ny = pad + Math.random() * (innerHeight - pad*2);
+  
+  btnNo.style.left = nx + 'px';
+  btnNo.style.top = ny + 'px';
+  
+  // Gradually fade out
+  const currentOpacity = parseFloat(btnNo.style.opacity || 1);
+  btnNo.style.opacity = String(Math.max(.1, currentOpacity - .15));
+}
 
-                // Show success and download button
-                status.className = 'status success';
-                status.innerHTML = `
-                    <div class="result-card">
-                        <a href="${downloadUrl}" class="download-btn" download target="_blank">📥 Download HD Video</a>
-                    </div>
-                `;
+// Mouse proximity detector
+document.addEventListener('mousemove', e => {
+  if(!isDodging) return;
+  const r = btnNo.getBoundingClientRect();
+  const dist = Math.hypot(e.clientX-(r.left+r.width/2), e.clientY-(r.top+r.height/2));
+  if(dist < 140) dodgeButton();
+});
 
-                downloadBtn.disabled = false;
-                downloadBtn.textContent = 'Download';
+btnNo.addEventListener('touchstart', e => {
+  if(isDodging){
+    e.preventDefault();
+    dodgeButton();
+  }
+}, {passive:false});
 
-            } catch (error) {
-                console.error('Error details:', error);
-                status.className = 'status error';
-                status.textContent = '❌ Failed to fetch video. Please check the URL and try again.';
-                downloadBtn.disabled = false;
-                downloadBtn.textContent = 'Download';
-            }
-        });
+// ── CELEBRATION ──
+const celebDiv = document.getElementById('celebration');
+const celebC = document.getElementById('celebCanvas');
+const celebX = celebC.getContext('2d');
+let particles = [], celebrating = false;
 
-        // Allow Enter key to trigger download
-        urlInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                downloadBtn.click();
-            }
-        });
-    </script>
+function celebrate(){
+  if(celebrating) return;
+  celebrating = true;
+  celebDiv.style.display = 'flex';
+  celebC.style.display = 'block';
+  celebC.width = innerWidth; celebC.height = innerHeight;
+
+  // Romantic floating hearts (soft CSS shapes)
+  const fh = document.getElementById('fhearts');
+  for(let i=0;i<25;i++){
+    const heart = document.createElement('div');
+    const sz = 14 + Math.random() * 24;
+    heart.style.cssText = `
+      position:absolute;
+      left:${Math.random()*100}%;
+      bottom:-60px;
+      width:${sz}px;height:${sz}px;
+      opacity:0;
+      animation:floatUp ${4+Math.random()*5}s ease-in ${Math.random()*2}s infinite;
+    `;
+    
+    // CSS heart shape
+    const h1 = document.createElement('div');
+    const h2 = document.createElement('div');
+    h1.style.cssText = h2.style.cssText = `
+      position:absolute;
+      width:${sz/2}px;height:${sz*.7}px;
+      border-radius:${sz/2}px ${sz/2}px 0 0;
+      background:hsl(${345+Math.random()*15},${60+Math.random()*20}%,${72+Math.random()*15}%);
+    `;
+    h1.style.left = `${sz/2}px`;
+    h1.style.transformOrigin = '0 100%';
+    h1.style.transform = 'rotate(-45deg)';
+    h2.style.left = '0';
+    h2.style.transformOrigin = '100% 100%';
+    h2.style.transform = 'rotate(45deg)';
+    
+    heart.appendChild(h1);
+    heart.appendChild(h2);
+    fh.appendChild(heart);
+  }
+
+  // Soft confetti with glow
+  const colors = [
+    {r:192,g:98,b:122},
+    {r:232,g:160,b:176},
+    {r:245,g:208,b:216},
+    {r:212,g:117,b:138},
+    {r:255,g:240,b:245}
+  ];
+  
+  for(let i=0;i<200;i++){
+    const col = colors[Math.floor(Math.random()*colors.length)];
+    particles.push({
+      x:Math.random()*celebC.width,
+      y:Math.random()*celebC.height - celebC.height,
+      w:3+Math.random()*8, 
+      h:3+Math.random()*8,
+      r:col.r, g:col.g, b:col.b,
+      vy:1.5+Math.random()*3, 
+      vx:(Math.random()-.5)*2,
+      rot:Math.random()*360, 
+      rs:(Math.random()-.5)*4,
+      op:.5+Math.random()*.5,
+      glow:Math.random()>.7
+    });
+  }
+  animCeleb();
+}
+
+function animCeleb(){
+  if(!celebrating) return;
+  celebX.clearRect(0,0,celebC.width,celebC.height);
+  
+  particles.forEach(p => {
+    p.y+=p.vy; 
+    p.x+=p.vx+Math.sin(p.y*.02)*.4; 
+    p.rot+=p.rs;
+    
+    celebX.save();
+    celebX.globalAlpha=p.op;
+    
+    // Add soft glow to some particles
+    if(p.glow){
+      celebX.shadowBlur = 12;
+      celebX.shadowColor = `rgba(${p.r},${p.g},${p.b},.6)`;
+    }
+    
+    celebX.translate(p.x,p.y);
+    celebX.rotate(p.rot*Math.PI/180);
+    celebX.fillStyle=`rgb(${p.r},${p.g},${p.b})`;
+    celebX.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+    celebX.restore();
+    
+    if(p.y>celebC.height){ 
+      p.y=-10; 
+      p.x=Math.random()*celebC.width; 
+    }
+  });
+  
+  requestAnimationFrame(animCeleb);
+}
+
+const st = document.createElement('style');
+st.textContent = `
+@keyframes floatUp{
+  0%{transform:translateY(0) scale(.4);opacity:0}
+  15%{opacity:.8}
+  85%{opacity:.5}
+  100%{transform:translateY(-${innerHeight+60}px) scale(1.1);opacity:0}
+}`;
+document.head.appendChild(st);
+</script>
 </body>
 </html>
