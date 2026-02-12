@@ -1,1 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Downloader</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .youtube-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+        }
+
+        .youtube-icon svg {
+            width: 36px;
+            height: 36px;
+            fill: #fff;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #1c1e21;
+        }
+
+        .subtitle {
+            font-size: 15px;
+            color: #65676b;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e4e6eb;
+            border-radius: 12px;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+            background: #f5f6f7;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #FF0000;
+            background: #fff;
+            box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.1);
+        }
+
+        input[type="text"]::placeholder {
+            color: #8a8d91;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #FF0000 0%, #CC0000 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            background: linear-gradient(135deg, #b8b8b8 0%, #8f8f8f 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 14px;
+            min-height: 20px;
+        }
+
+        .status.loading {
+            color: #65676b;
+        }
+
+        .status.error {
+            color: #e41e3f;
+            background: #ffebee;
+            padding: 12px;
+            border-radius: 8px;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .status.success {
+            color: #00a400;
+        }
+
+        .result-card {
+            background: #f5f6f7;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .video-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1c1e21;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .download-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, #FF0000 0%, #B80000 100%);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(255, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 0, 0, 0.4);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+            color: #65676b;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 24px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .subtitle {
+                font-size: 14px;
+            }
+
+            input[type="text"], .btn {
+                font-size: 14px;
+            }
+
+            .youtube-icon {
+                width: 56px;
+                height: 56px;
+            }
+
+            .youtube-icon svg {
+                width: 32px;
+                height: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="youtube-icon">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                </svg>
+            </div>
+            <h1>YouTube Downloader</h1>
+            <p class="subtitle">Download videos in HD quality</p>
+        </div>
+
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="urlInput" 
+                placeholder="Paste YouTube video URL here..."
+                autocomplete="off"
+            >
+        </div>
+
+        <button class="btn" id="downloadBtn">Download</button>
+
+        <div class="status" id="status"></div>
+    </div>
+
+    <footer>
+        © 2026 | Siegfried Samá
+    </footer>
+
+    <script>
+        const urlInput = document.getElementById('urlInput');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const status = document.getElementById('status');
+
+        downloadBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+
+            // Clear previous status
+            status.className = 'status';
+            status.innerHTML = '';
+
+            // Validate input
+            if (!url) {
+                status.className = 'status error';
+                status.textContent = '⚠️ Please enter a YouTube URL';
+                return;
+            }
+
+            if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+                status.className = 'status error';
+                status.textContent = '⚠️ Invalid YouTube URL';
+                return;
+            }
+
+            // Show loading state
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<span class="spinner"></span>Processing...';
+            status.className = 'status loading';
+            status.textContent = '⏳ Fetching video...';
+
+            try {
+                const encodedUrl = encodeURIComponent(url);
+                const apiUrl = `https://api-library-kohi.onrender.com/api/alldl?url=${encodedUrl}`;
+
+                const response = await fetch(apiUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                    }
+                });
+                
+                // Check if response is ok
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('API Response:', result);
+
+                // Check if API returned success
+                if (!result.status || result.status !== true) {
+                    throw new Error('API returned unsuccessful response');
+                }
+
+                // Get download URL from result.data.videoUrl (nested structure)
+                const downloadUrl = result.data?.videoUrl;
+
+                if (!downloadUrl) {
+                    console.error('Full response:', result);
+                    throw new Error('Download link not found in response');
+                }
+
+                // Show success and download button
+                status.className = 'status success';
+                status.innerHTML = `
+                    <div class="result-card">
+                        <a href="${downloadUrl}" class="download-btn" download target="_blank">📥 Download HD Video</a>
+                    </div>
+                `;
+
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = 'Download';
+
+            } catch (error) {
+                console.error('Error details:', error);
+                status.className = 'status error';
+                status.textContent = '❌ Failed to fetch video. Please check the URL and try again.';
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = 'Download';
+            }
+        });
+
+        // Allow Enter key to trigger download
+        urlInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                downloadBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>
